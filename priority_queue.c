@@ -172,9 +172,3 @@ void print_heap(Heap *heap) {
     }
     pthread_mutex_unlock(&heap->lock_on_data);
 }
-
-int main(void) {
-    Heap *heap = init_queue(10);
-    deque(heap);
-    return 0;
-}
