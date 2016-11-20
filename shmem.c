@@ -25,17 +25,21 @@ int queue_size;
 Item *items;
 Heap *queue;
 pthread_t consumer_t, producer_t, clien_t, server_t;
-pthread_mutex_t mutex;
+pthread_mutex_t mutex, mutex2;
 pthread_cond_t condc, condp;
 
 
 void *producer(void *arg) {
     printf("Producer started\n");
+    printf("producer - loh1\n");
     for (count = 0; count < items_num; count++) {
+        printf("producer - loh2\n");
         pthread_mutex_lock(&mutex);    /* protect buffer */
+        printf("%d %d\n", queue->size, queue->MAX_SIZE);
         while (queue->size == queue->MAX_SIZE) {               /* If there is something in the buffer then wait */
             pthread_cond_wait(&condp, &mutex);
         }
+        printf("producer - loh3\n");
         /*Sleep item producer milliseconds and enque items[count] to priority queue
         */
         usleep(items[count].produce_time * 1000);
@@ -86,16 +90,7 @@ void *consumer(void *arg) {
 
 int main(int argc, char *argv[]) {
 
-    int status = pthread_create(&server_t, NULL, socket_server_start, NULL);
-    if (status != 0) {
-        printf("main error: can't create socker server thread, status = %d\n", status);
-        exit(ERROR_CREATE_THREAD);
-    }
-    status = pthread_create(&clien_t, NULL, socket_client_connect, NULL);
-    if (status != 0) {
-        printf("main error: can't create socker client thread, status = %d\n", status);
-        exit(ERROR_CREATE_THREAD);
-    }
+    int status;
 
     int i;
     items_num = countLines("items") - 1;
@@ -116,13 +111,21 @@ int main(int argc, char *argv[]) {
     }
     queue_size = atoi(argv[1]);
     if (strcmp(argv[2], "shmem")) {
-        COMMUNICATION_TYPE = 0;
+        COMMUNICATION_TYPE = 1;
+        pthread_mutex_lock(&mutex2);
+        status = pthread_create(&server_t, NULL, socket_server_start, &mutex2);
+        if (status != 0) {
+            printf("main error: can't create socker server thread, status = %d\n", status);
+            exit(ERROR_CREATE_THREAD);
+        }
+        pthread_mutex_lock(&mutex2);
     }
     else {
-        COMMUNICATION_TYPE = 1;
+        COMMUNICATION_TYPE = 0;
     }
     if (COMMUNICATION_TYPE) {
         queue = client_init_queue(queue_size);
+        printf("Queue after creation %d",queue->size);
     } else {
         queue = init_queue(queue_size);
     }
@@ -151,6 +154,7 @@ int main(int argc, char *argv[]) {
         printf("main error: can't join producer thread, status = %d\n", status);
         exit(ERROR_JOIN_THREAD);
     }
+    pthread_join(server_t, NULL);
 
     return EXIT_SUCCESS;
 }

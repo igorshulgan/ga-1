@@ -22,7 +22,7 @@
 void server_close_queue(int sock) {
 
     Heap *heap;
-    int n = read(sock, heap, sizeof(heap));
+    int n = read(sock, &heap, sizeof(heap));
 
     if (n < 0) {
         perror("ERROR reading from socket");
@@ -34,15 +34,17 @@ void server_close_queue(int sock) {
 
 void server_deque(int sock) {
     Heap *heap;
-    int n = read(sock, heap, sizeof(heap));
+    int n = read(sock, &heap, sizeof(heap));
 
     if (n < 0) {
         perror("ERROR reading from socket");
         exit(1);
     }
 
+    n = write(sock, "ready", 5);
+
     void *result = deque(heap);
-    n = write(sock, result, sizeof(result));
+    n = write(sock, &result, sizeof(result));
 
     if (n < 0) {
         perror("ERROR writing to socket");
@@ -54,7 +56,7 @@ void server_deque(int sock) {
 void server_enqueue(int sock) {
 
     Heap *heap;
-    int n = read(sock, heap, sizeof(heap));
+    int n = read(sock, &heap, sizeof(heap));
 
     if (n < 0) {
         perror("ERROR reading from socket");
@@ -62,7 +64,9 @@ void server_enqueue(int sock) {
     }
     int priority;
 
-    n = read(sock, priority, sizeof(priority));
+    n = write(sock, "ready", 5);
+
+    n = read(sock, &priority, sizeof(priority));
 
     if (n < 0) {
         perror("ERROR reading from socket");
@@ -70,7 +74,10 @@ void server_enqueue(int sock) {
     }
 
     void *data;
-    n = read(sock, data, sizeof(data));
+
+    n = write(sock, "ready", 5);
+
+    n = read(sock, &data, sizeof(data));
 
     if (n < 0) {
         perror("ERROR reading from socket");
@@ -79,7 +86,7 @@ void server_enqueue(int sock) {
 
     /* Now read server response */
     int result = enqueue(heap, priority, data);
-    n = write(sock, result, sizeof(result));
+    n = write(sock, &result, sizeof(result));
 
     if (n < 0) {
         perror("ERROR writing to socket");
@@ -91,7 +98,8 @@ void server_enqueue(int sock) {
 void server_init_queue(int sock) {
 
     int size;
-    int n = read(sock, size, sizeof(size));
+    int n = read(sock, &size, sizeof(size));
+    printf("size %d\n", size);
 
     if (n < 0) {
         perror("ERROR reading from socket");
@@ -99,7 +107,10 @@ void server_init_queue(int sock) {
     }
 
     Heap *result = init_queue(size);
-    n = write(sock, result, sizeof(result));
+
+    printf("server %d\n", result->MAX_SIZE);
+
+    n = write(sock, &result, sizeof(result));
 
     if (n < 0) {
         perror("ERROR writing to socket");
@@ -121,19 +132,24 @@ void doprocessing (int sock) {
         perror("ERROR reading from socket");
         exit(1);
     }
-    if (strcmp(buffer, "enqueue"))
+    printf("loh3\n %s\n", buffer);
+
+    n = write(sock, "ready", 5);
+
+    if (strcmp(buffer, "init_queue") == 0)
         server_init_queue(sock);
-    if (strcmp(buffer, "enqueue"))
+    if (strcmp(buffer, "enqueue") == 0)
         server_enqueue(sock);
-    if (strcmp(buffer, "deque"))
+    if (strcmp(buffer, "deque") == 0)
         server_deque(sock);
-    if (strcmp(buffer, "close_queue"))
+    if (strcmp(buffer, "close_queue") == 0)
         server_close_queue(sock);
 
     return;
 };
 
-void socket_server_start() {
+void socket_server_start(pthread_mutex_t mutex) {
+
 
     char buffer[256];
     struct sockaddr_in serv_addr, cli_addr;
@@ -149,7 +165,7 @@ void socket_server_start() {
 
     /* Initialize socket structure */
     bzero((char *) &serv_addr, sizeof(serv_addr));
-    portno = 5002;
+    portno = 5012;
 
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -167,6 +183,9 @@ void socket_server_start() {
 
     listen(sockfd,5);
     clilen = sizeof(cli_addr);
+
+    printf("Server created\n");
+    pthread_mutex_unlock(&mutex);
 
     while (1) {
         newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
