@@ -50,12 +50,10 @@ void close_queue(Heap *heap) {
 
 
 int enqueue(Heap *heap, int priority, void *data) {
-    pthread_mutex_lock(&heap->lock_on_data);
     if (heap->size == heap->MAX_SIZE) {
-        pthread_mutex_unlock(&heap->lock_on_data);
         pthread_mutex_lock(&heap->lock_on_enqueue);
-        pthread_mutex_lock(&heap->lock_on_data);
     }
+    pthread_mutex_lock(&heap->lock_on_data);
     int index = heap->size++;
     Priority_node *queue = heap->queue;
     queue[index].priority = priority;
@@ -80,12 +78,12 @@ int enqueue(Heap *heap, int priority, void *data) {
 
 int delete_max(Heap *heap) {
     // if(heap->size == 0){
-    // 	pthread_mutex_lock(&heap->lock_on_deque);
+    //  pthread_mutex_lock(&heap->lock_on_deque);
     // }
     // if(heap->size == 1){
-    // 	heap->size = 0;
-    // 	pthread_mutex_unlock(&heap->lock_on_data);
-    // 	return 0;
+    //  heap->size = 0;
+    //  pthread_mutex_unlock(&heap->lock_on_data);
+    //  return 0;
     // }
     Priority_node *queue = heap->queue;
     int index = 0, size = heap->size;
@@ -136,6 +134,7 @@ int delete_max(Heap *heap) {
     }
     // pthread_mutex_unlock(&heap->lock_on_enqueue);
     // pthread_mutex_unlock(&heap->lock_on_data);
+    heap->size = size;
     return 0;
 }
 
@@ -146,16 +145,14 @@ void *getMax(Heap *heap) {
 }
 
 void *deque(Heap *heap) {
-    pthread_mutex_lock(&heap->lock_on_data);
     if (heap->size == 0) {
         printf("Blocked deque\n");
-        pthread_mutex_unlock(&heap->lock_on_data);
         pthread_mutex_lock(&heap->lock_on_deque);
-        pthread_mutex_lock(&heap->lock_on_data);
     }
+    pthread_mutex_lock(&heap->lock_on_data);
+
     void *result = getMax(heap);
     delete_max(heap);
-    heap->size=heap->size-1;
     pthread_mutex_unlock(&heap->lock_on_enqueue);
     pthread_mutex_unlock(&heap->lock_on_data);
     return result;
