@@ -86,18 +86,9 @@ void *consumer(void *arg) {
 
 int main(int argc, char *argv[]) {
 
-    int status = pthread_create(&server_t, NULL, socket_server_start, NULL);
-    if (status != 0) {
-        printf("main error: can't create socker server thread, status = %d\n", status);
-        exit(ERROR_CREATE_THREAD);
-    }
-    status = pthread_create(&clien_t, NULL, socket_client_connect, NULL);
-    if (status != 0) {
-        printf("main error: can't create socker client thread, status = %d\n", status);
-        exit(ERROR_CREATE_THREAD);
-    }
+   
 
-    int i;
+    int i,status;
     items_num = countLines("items") - 1;
     printf("Number of items: %d\n", items_num);
     items = calloc(items_num, sizeof(Item));
@@ -120,6 +111,16 @@ int main(int argc, char *argv[]) {
     }
     else {
         COMMUNICATION_TYPE = 1;
+        status = pthread_create(&server_t, NULL, socket_server_start, NULL);
+        if (status != 0) {
+            printf("main error: can't create socker server thread, status = %d\n", status);
+            exit(ERROR_CREATE_THREAD);
+         }
+        status = pthread_create(&clien_t, NULL, socket_client_connect, NULL);
+        if (status != 0) {
+            printf("main error: can't create socker client thread, status = %d\n", status);
+            exit(ERROR_CREATE_THREAD);
+        }
     }
     if (COMMUNICATION_TYPE) {
         queue = client_init_queue(queue_size);
