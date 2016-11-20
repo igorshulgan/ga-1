@@ -27,14 +27,22 @@ typedef struct Item {
     int priority;
 } Item;
 
-void server_size(int sock){
-    write(sock,&heap->size,sizeof(int));
+void server_size(int sock) {
+    write(sock, &(heap->size), sizeof(int));
 }
+
 void server_deque(int sock) {
 
-    Item* temp;
-    temp=deque(heap);
-    int n = write(sock, temp, sizeof(Item));
+    Item* temp1;
+
+    printf("----------------\n");
+    print_heap(heap);
+    temp1 = deque(heap);
+    printf("Consumer dequed item[%d] with priority %d. New size: %d \n", temp1, temp1->priority,
+           heap->size);
+    print_heap(heap);
+    printf("----------------\n");
+    int n = write(sock, temp1, sizeof(Item));
 
     if (n < 0) {
         perror("ERROR writing to socket");
@@ -51,9 +59,17 @@ void server_enqueue(int sock) {
         perror("ERROR reading from socket");
         exit(1);
     }
-    
+
+    printf("Producer produced item[%d] with priority %d. New size: %d \n", temp, temp.priority,
+           heap->size);
     enqueue(heap, temp.priority, &temp);
-    
+
+    Item* temp1;
+    temp1=deque(heap);
+    printf("Producer dequed item[%d] with priority %d. New size: %d \n", temp1, temp.priority,
+           heap->size);
+    enqueue(heap, temp.priority, &temp);
+
     return;
 }
 
@@ -70,37 +86,42 @@ void server_init_queue(int sock) {
 
     heap = init_queue(size);
 
-    printf("Heap created. Heap size: %d\n",heap->size);
+    printf("Heap created. Heap size: %d\n", heap->size);
+    printf("Heap address %d \n", heap);
     return;
 }
 
 int sockfd, newsockfd, portno, clilen;
 
-void doprocessing (int sock) {
+void doprocessing(int sock) {
     int n;
     const char *buffer[256];
-    bzero(buffer,256);
-    n = read(sock,buffer,255);
+    bzero(buffer, 256);
+    n = read(sock, buffer, 255);
 
     if (n < 0) {
         perror("ERROR reading from socket");
         exit(1);
     }
-    printf("loh3\n %s\n", buffer);
+    //printf("Do processing called: %s \n", buffer);
 
-
-    if (strcmp(buffer, "init_queue") == 0)
+    if (strcmp(buffer, "init_queue") == 0) {
         write(sock, "ready", 5);
         server_init_queue(sock);
-    if (strcmp(buffer, "enqueue") == 0)
+    }
+    if (strcmp(buffer, "enqueue") == 0) {
         write(sock, "ready", 5);
         server_enqueue(sock);
-    if (strcmp(buffer, "deque") == 0)
+    }
+    if (strcmp(buffer, "deque") == 0) {
         server_deque(sock);
-    if (strcmp(buffer, "queue_size") == 0)
+    }
+    if (strcmp(buffer, "queue_size") == 0) {
         server_size(sock);
-    if (strcmp(buffer, "close_queue") == 0)
+    }
+    if (strcmp(buffer, "close_queue") == 0) {
         close_queue(heap);
+    }
 
     return;
 };
@@ -110,7 +131,7 @@ void socket_server_start(pthread_mutex_t mutex) {
 
     char buffer[256];
     struct sockaddr_in serv_addr, cli_addr;
-    int  n;
+    int n;
 
     /* First call to socket() function */
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -122,7 +143,7 @@ void socket_server_start(pthread_mutex_t mutex) {
 
     /* Initialize socket structure */
     bzero((char *) &serv_addr, sizeof(serv_addr));
-    portno = 5012;
+    portno = 5016;
 
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -138,7 +159,7 @@ void socket_server_start(pthread_mutex_t mutex) {
        * go in sleep mode and will wait for the incoming connection
     */
 
-    listen(sockfd,5);
+    listen(sockfd, 5);
     clilen = sizeof(cli_addr);
 
     printf("Server created\n");
@@ -152,27 +173,14 @@ void socket_server_start(pthread_mutex_t mutex) {
             exit(1);
         }
 
-        /* Create child process */
-        int pid = fork();
 
-        if (pid < 0) {
-            perror("ERROR on fork");
-            exit(1);
-        }
-
-        if (pid == 0) {
-            /* This is the client process */
-            doprocessing(newsockfd);
-            exit(0);
-        }
-        else {
-            close(newsockfd);
-        }
+        doprocessing(newsockfd);
+        close(newsockfd);
 
     } /* end of while */
 
 }
 
-void stop(){
+void stop() {
     close(sockfd);
 }
