@@ -26,7 +26,7 @@ typedef struct {
 } Priority_node;
 
 typedef struct {
-    Priority_node queue[QUEUE_SIZE];
+    Priority_node* queue;
     int size;
     int MAX_SIZE;
     pthread_mutex_t lock_on_data;
@@ -36,6 +36,7 @@ typedef struct {
 
 Heap *init_queue(int size) {
     Heap *new_heap = malloc(sizeof(Heap));
+    new_heap->queue = malloc(sizeof(Priority_node)*size);
     new_heap->MAX_SIZE = size;
     new_heap->size = 0;
     pthread_mutex_lock(&new_heap->lock_on_enqueue);
@@ -45,6 +46,7 @@ Heap *init_queue(int size) {
 }
 
 void close_queue(Heap *heap) {
+    free(heap->queue);
     free(heap);
 }
 
