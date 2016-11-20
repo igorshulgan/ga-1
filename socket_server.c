@@ -19,32 +19,16 @@
 
 #include <string.h>
 
-void server_close_queue(int sock) {
+Heap *heap;
 
-    Heap *heap;
-    int n = read(sock, &heap, sizeof(heap));
-
-    if (n < 0) {
-        perror("ERROR reading from socket");
-        exit(1);
-    }
-    close_queue(heap);
-
+void server_size(int sock){
+    write(sock,&heap->size,sizeof(int));
 }
-
 void server_deque(int sock) {
-    Heap *heap;
-    int n = read(sock, &heap, sizeof(heap));
 
-    if (n < 0) {
-        perror("ERROR reading from socket");
-        exit(1);
-    }
-
-    n = write(sock, "ready", 5);
-
-    void *result = deque(heap);
-    n = write(sock, &result, sizeof(result));
+    Item *temp;
+    temp=deque(heap);
+    n = write(sock, *temp, sizeof(Item));
 
     if (n < 0) {
         perror("ERROR writing to socket");
@@ -54,44 +38,16 @@ void server_deque(int sock) {
 }
 
 void server_enqueue(int sock) {
-
-    Heap *heap;
-    int n = read(sock, &heap, sizeof(heap));
-
-    if (n < 0) {
-        perror("ERROR reading from socket");
-        exit(1);
-    }
-    int priority;
-
-    n = write(sock, "ready", 5);
-
-    n = read(sock, &priority, sizeof(priority));
+    Item temp;
+    int n = read(sock, &temp, sizeof(Item));
 
     if (n < 0) {
         perror("ERROR reading from socket");
         exit(1);
     }
-
-    void *data;
-
-    n = write(sock, "ready", 5);
-
-    n = read(sock, &data, sizeof(data));
-
-    if (n < 0) {
-        perror("ERROR reading from socket");
-        exit(1);
-    }
-
-    /* Now read server response */
-    int result = enqueue(heap, priority, data);
-    n = write(sock, &result, sizeof(result));
-
-    if (n < 0) {
-        perror("ERROR writing to socket");
-        exit(1);
-    }
+    
+    enqueue(heap, temp.priority, &temp);
+    
     return;
 }
 
@@ -106,18 +62,10 @@ void server_init_queue(int sock) {
         exit(1);
     }
 
-    Heap *result = init_queue(size);
+    heap = init_queue(size);
 
-    printf("server %d\n", result->MAX_SIZE);
-
-    n = write(sock, &result, sizeof(result));
-
-    if (n < 0) {
-        perror("ERROR writing to socket");
-        exit(1);
-    }
+    printf("Heap created. Heap size: %d\n",heap->size);
     return;
-
 }
 
 int sockfd, newsockfd, portno, clilen;
@@ -134,16 +82,19 @@ void doprocessing (int sock) {
     }
     printf("loh3\n %s\n", buffer);
 
-    n = write(sock, "ready", 5);
 
     if (strcmp(buffer, "init_queue") == 0)
+        write(sock, "ready", 5);
         server_init_queue(sock);
     if (strcmp(buffer, "enqueue") == 0)
+        write(sock, "ready", 5);
         server_enqueue(sock);
     if (strcmp(buffer, "deque") == 0)
         server_deque(sock);
+    if (strcmp(buffer, "queue_size") == 0)
+        server_size(sock);
     if (strcmp(buffer, "close_queue") == 0)
-        server_close_queue(sock);
+        close_queue(heap);
 
     return;
 };

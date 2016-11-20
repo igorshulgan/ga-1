@@ -31,27 +31,22 @@ pthread_cond_t condc, condp;
 
 void *producer(void *arg) {
     printf("Producer started\n");
-    printf("producer - loh1\n");
     for (count = 0; count < items_num; count++) {
-        printf("producer - loh2\n");
+    
         pthread_mutex_lock(&mutex);    /* protect buffer */
-        printf("%d %d\n", queue->size, queue->MAX_SIZE);
-        while (queue->size == queue->MAX_SIZE) {               /* If there is something in the buffer then wait */
+        printf("%d %d\n", client_queue_size(), 5);
+        while (client_queue_size() == 5) {               /* If there is something in the buffer then wait */
             pthread_cond_wait(&condp, &mutex);
         }
         printf("producer - loh3\n");
         /*Sleep item producer milliseconds and enque items[count] to priority queue
         */
         usleep(items[count].produce_time * 1000);
-        if (COMMUNICATION_TYPE) {
-            client_enqueue(queue, items[count].priority, &items[count]);
-        }
-        else
-        {
-            enqueue(queue, items[count].priority, &items[count]);
-        }
+        
+        client_enqueue(items[count]);
+       
         printf("Producer produced item[%d] with priority %d. New size: %d \n", items[count].id, items[count].priority,
-               queue->size);
+               client_queue_size());
 
         pthread_cond_signal(&condc);    /* wake up consumer */
         pthread_mutex_unlock(&mutex);    /* release the buffer */
@@ -69,17 +64,14 @@ void *consumer(void *arg) {
             pthread_cond_wait(&condc, &mutex);
         }
         /*sleep and dequeue item*/
-        Item *dequed;
-        if (COMMUNICATION_TYPE) {
-            dequed = client_deque(queue);
-        } else {
-            dequed = deque(queue);
-        }
+        Item dequed;
+        client_deque(&dequed);
+        
 
-        printf("Consumer ready to consume!. Queue size = %d \n", queue->size);
-        printf("Dequeed item[%d] with  priority %d. New size: %d \n", dequed->id, dequed->priority, queue->size);
-        usleep(dequed->consume_time * 1000);
-        fprintf(file, "%d %d %d %d\n", dequed->id, dequed->produce_time, dequed->consume_time, dequed->priority);
+        printf("Consumer ready to consume!. Queue size = %d \n", client_queue_size());
+        printf("Dequeed item[%d] with  priority %d. New size: %d \n", dequed.id, dequed.priority, client_queue_size());
+        usleep(dequed.consume_time * 1000);
+        //fprintf(file, "%d %d %d %d\n", dequed->id, dequed->produce_time, dequed->consume_time, dequed->priority);
         pthread_cond_signal(&condp);    /* wake up consumer */
         pthread_mutex_unlock(&mutex);    /* release the buffer */
     }
@@ -110,25 +102,18 @@ int main(int argc, char *argv[]) {
         printf("Item [%d]: %d\n", items[i].id, items[i].priority);
     }
     queue_size = atoi(argv[1]);
-    if (strcmp(argv[2], "shmem")) {
-        COMMUNICATION_TYPE = 1;
-        pthread_mutex_lock(&mutex2);
-        status = pthread_create(&server_t, NULL, socket_server_start, &mutex2);
-        if (status != 0) {
-            printf("main error: can't create socker server thread, status = %d\n", status);
-            exit(ERROR_CREATE_THREAD);
-        }
-        pthread_mutex_lock(&mutex2);
+    
+    pthread_mutex_lock(&mutex2);
+    status = pthread_create(&server_t, NULL, socket_server_start, &mutex2);
+    if (status != 0) {
+        printf("main error: can't create socker server thread, status = %d\n", status);
+        exit(ERROR_CREATE_THREAD);
     }
-    else {
-        COMMUNICATION_TYPE = 0;
-    }
-    if (COMMUNICATION_TYPE) {
-        queue = client_init_queue(queue_size);
-        printf("Queue after creation %d",queue->size);
-    } else {
-        queue = init_queue(queue_size);
-    }
+    pthread_mutex_lock(&mutex2);
+    
+    queue = client_init_queue(queue_size);
+    printf("Queue after creation %d",client_queue_size());
+    
 
 
     /*Initialize queue

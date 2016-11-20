@@ -10,7 +10,15 @@
 #include <string.h>
 
 
-void client_close_queue(Heap *heap) {
+int client_queue_size(){
+    int sockfd=socket_client_connect();
+    write(sockfd, "queue_size", strlen("queue_size"));
+    int size;
+    read(sockfd,&size,sizeof(int));
+    return size;
+}
+
+void client_close_queue() {
     int sockfd = socket_client_connect();
     int n = write(sockfd, "close_queue", strlen("close_queue"));
 
@@ -18,48 +26,36 @@ void client_close_queue(Heap *heap) {
         perror("ERROR writing to socket");
         exit(1);
     }
-
-    const char* res[255];
-    n = read(sockfd, &res, 255);
-
-    n = write(sockfd, &heap, strlen(heap));
-
-    if (n < 0) {
-        perror("ERROR writing to socket");
-        exit(1);
-    }
-
 }
 
-void *client_deque(Heap *heap) {
+void *client_deque(Item* item) {
     int sockfd = socket_client_connect();
 
     int n = write(sockfd, "deque", strlen("deque"));
 
-    const char* res[255];
-    n = read(sockfd, &res, 255);
-
-    n = write(sockfd, &heap, sizeof(heap));
-
     if (n < 0) {
         perror("ERROR writing to socket");
         exit(1);
     }
 
-    void *result;
-    n = read(sockfd, &result, sizeof(result));
+    Item dequed;
+    n = read(sockfd, &dequed, sizeof(Item));
 
     if (n < 0) {
         perror("ERROR reading from socket");
         exit(1);
     }
 
+    item->id=dequed.id;
+    item->priority=dequed.priority;
+    item->consume_time=dequed.consume_time;
+    item->produce_time=dequed.produce_time;
+    printf("Item dequed succesfully!\n");
+   
     return result;
 }
 
-int client_enqueue(Heap *heap, int priority, void *data) {
-
-    printf("loh5\n");
+int client_enqueue(Item* item) {
 
     int sockfd = socket_client_connect();
 
@@ -68,43 +64,16 @@ int client_enqueue(Heap *heap, int priority, void *data) {
     const char* res[255];
     n = read(sockfd, &res, 255);
 
-    n = write(sockfd, &heap, sizeof(heap));
-
-    n = read(sockfd, &res, 255);
+    n = write(sockfd, *item, sizeof(Item));
 
     if (n < 0) {
         perror("ERROR writing to socket");
-        exit(1);
-    }
-
-    n = write(sockfd, &priority, sizeof(priority));
-
-    n = read(sockfd, res, 255);
-
-    if (n < 0) {
-        perror("ERROR writing to socket");
-        exit(1);
-    }
-
-    n = write(sockfd, &data, sizeof(data));
-
-    if (n < 0) {
-        perror("ERROR writing to socket");
-        exit(1);
-    }
-
-    /* Now read server response */
-    int result;
-    n = read(sockfd, &result, sizeof(result));
-
-    if (n < 0) {
-        perror("ERROR reading from socket");
         exit(1);
     }
 
     return result;
 }
-Heap *client_init_queue(int size) {
+int *client_init_queue(int size) {
 
     int sockfd = socket_client_connect();
 
@@ -117,24 +86,14 @@ Heap *client_init_queue(int size) {
     const char* res[255];
     n = read(sockfd, res, 255);
 
-    n = write(sockfd, &size, sizeof(size));
+    n = write(sockfd, &size, sizeof(int));
 
     if (n < 0) {
         perror("ERROR writing to socket");
         exit(1);
     }
 
-    Heap *result;
-    n = read(sockfd, &result, sizeof(result));
-
-    if (n < 0) {
-        perror("ERROR reading from socket");
-        exit(1);
-    }
-    printf("LOH\n");
-    printf("client %d\n", result->MAX_SIZE);
-
-    return result;
+    return 0;
 
 }
 
