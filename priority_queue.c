@@ -155,6 +155,7 @@ void *deque(Heap *heap) {
     }
     void *result = getMax(heap);
     delete_max(heap);
+    heap->size=heap->size-1;
     pthread_mutex_unlock(&heap->lock_on_enqueue);
     pthread_mutex_unlock(&heap->lock_on_data);
     return result;
