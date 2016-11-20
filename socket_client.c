@@ -10,6 +10,7 @@
 #include <string.h>
 
 
+
 int client_queue_size(){
     int sockfd=socket_client_connect();
     write(sockfd, "queue_size", strlen("queue_size"));
@@ -52,10 +53,10 @@ void *client_deque(Item* item) {
     item->produce_time=dequed.produce_time;
     printf("Item dequed succesfully!\n");
    
-    return result;
+    return 0;
 }
 
-int client_enqueue(Item* item) {
+int client_enqueue(Item item) {
 
     int sockfd = socket_client_connect();
 
@@ -64,14 +65,14 @@ int client_enqueue(Item* item) {
     const char* res[255];
     n = read(sockfd, &res, 255);
 
-    n = write(sockfd, *item, sizeof(Item));
+    n = write(sockfd, &item, sizeof(Item));
 
     if (n < 0) {
         perror("ERROR writing to socket");
         exit(1);
     }
 
-    return result;
+    return 0;
 }
 int *client_init_queue(int size) {
 

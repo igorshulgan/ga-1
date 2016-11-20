@@ -10,12 +10,6 @@
 #define ERROR_JOIN_THREAD   -12
 #define QUEUE_SIZE 100
 
-typedef struct Item {
-    int id;
-    int consume_time;
-    int produce_time;
-    int priority;
-} Item;
 
 int COMMUNICATION_TYPE = 0;
 

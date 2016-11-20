@@ -20,15 +20,21 @@
 #include <string.h>
 
 Heap *heap;
+typedef struct Item {
+    int id;
+    int consume_time;
+    int produce_time;
+    int priority;
+} Item;
 
 void server_size(int sock){
     write(sock,&heap->size,sizeof(int));
 }
 void server_deque(int sock) {
 
-    Item *temp;
+    Item* temp;
     temp=deque(heap);
-    n = write(sock, *temp, sizeof(Item));
+    int n = write(sock, temp, sizeof(Item));
 
     if (n < 0) {
         perror("ERROR writing to socket");
