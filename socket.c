@@ -1,27 +1,20 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <fcntl.h>
 #include <pthread.h>
 #include <assert.h>
 #include <semaphore.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <netdb.h>
 #include <netinet/in.h>
 
 
 #define ERROR_CREATE_THREAD -11
 #define ERROR_JOIN_THREAD   -12
-#define QUEUE_SIZE 100
 
 #define QUEUE_SIZE 100
 
@@ -160,7 +153,7 @@ int delete_max(Heap *heap) {
         }
         if (queue[index].priority < queue[max_child].priority) {
             // print_heap(heap);
-            // // printf("\nindex is %d, max_child is %d, size is %d, left_child is %d, right_child is %d\n", index, max_child, heap->size, left_child, right_child );
+            // printf("\nindex is %d, max_child is %d, size is %d, left_child is %d, right_child is %d\n", index, max_child, heap->size, left_child, right_child );
             Priority_node temp_node = queue[index];
             queue[index] = queue[max_child];
             queue[max_child] = temp_node;
@@ -186,7 +179,7 @@ void *getMax(Heap *heap) {
 
 void *deque(Heap *heap) {
     if (heap->size == 0) {
-        // printf("Blocked deque\n");
+        printf("Blocked deque\n");
         pthread_mutex_lock(&heap->lock_on_deque);
     }
     pthread_mutex_lock(&heap->lock_on_data);
@@ -200,19 +193,19 @@ void *deque(Heap *heap) {
 void print_heap(Heap *heap) {
     int i;
     pthread_mutex_lock(&heap->lock_on_data);
-    // printf("\nIT IS A HEAP\n");
+    printf("\nIT IS A HEAP\n");
     for (i = 0; i < heap->size; i++) {
-        // printf("%6d", heap->queue[i].priority);
+        printf("%6d", heap->queue[i].priority);
     }
-    // printf("\n");
+    printf("\n");
     for (i = 0; i < heap->size; i++) {
-        // printf("%6d", heap->queue[i].data);
+        printf("%6d", heap->queue[i].data);
     }
     pthread_mutex_unlock(&heap->lock_on_data);
 }
 
 void print_item(Item *item) {
-    // printf("Item[%d] with priority %d, c_time: %d, p_time: %d\n", item->id, item->priority, item->consume_time, item->produce_time);
+     printf("Item[%d] with priority %d, c_time: %d, p_time: %d\n", item->id, item->priority, item->consume_time, item->produce_time);
 }
 
 #define PORT_NUM 5018
@@ -231,8 +224,8 @@ void server_deque(int sock) {
     Item *temp1 = (Item *) malloc(sizeof(Item));
     temp1 = deque(heap);
 
-    // printf("Server Dequeued ");
-    print_item(temp1);
+    printf("Server Dequeued ");
+    //print_item(temp1);
 
     int n = write(sock, temp1, sizeof(Item));
 
@@ -253,8 +246,8 @@ void server_enqueue(int sock) {
         exit(1);
     }
 
-    // printf("Server enqueing ");
-    print_item(temp);
+    printf("Server enqueing ");
+    //print_item(temp);
 
     enqueue(heap, temp->priority, temp);
 
@@ -262,10 +255,10 @@ void server_enqueue(int sock) {
 }
 
 void server_init_queue(int sock) {
-
+    printf("SERVER INTI QUEU\n");
     int size;
     int n = read(sock, &size, sizeof(size));
-    // printf("size %d\n", size);
+    printf("size %d\n", size);
 
     if (n < 0) {
         perror("ERROR reading from socket");
@@ -274,7 +267,7 @@ void server_init_queue(int sock) {
 
     heap = init_queue(size);
 
-    // printf("Heap created. Heap size: %d\n", heap->size);
+    printf("Heap created. Heap size: %d\n", heap->size);
 
     return;
 }
@@ -357,12 +350,13 @@ void socket_server_start(sem_t* semvar) {
     clilen = sizeof(cli_addr);
 
 
-    // printf("Server created\n");
+    printf("Server created\n");
     sem_post(semvar);
 
     while (1) {
+        printf("LOH1\n");
         newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
-
+        printf("LOH2\n");
         if (newsockfd < 0) {
             perror("ERROR on accept");
             exit(1);
@@ -437,7 +431,7 @@ void *client_deque(Item *item) {
     item->priority = dequed.priority;
     item->consume_time = dequed.consume_time;
     item->produce_time = dequed.produce_time;
-    // printf("Item[%d] dequed succesfully(client)!\n", dequed.id);
+    printf("Item[%d] dequed succesfully(client)!\n", dequed.id);
 
     closeSocket(sockfd);
     return 0;
@@ -464,17 +458,20 @@ int client_enqueue(Item item) {
 }
 
 int *client_init_queue(int size) {
-
+    printf("CLIENT INIT QUEUE\n");
     int sockfd = socket_client_connect();
-
+    printf("CLIENT INIT QUEUE\n");
     int n = write(sockfd, "init_queue", strlen("init_queue"));
 
     if (n < 0) {
         perror("ERROR writing to socket");
         exit(1);
     }
+    printf("CLIENT INIT QUEUE\n");
     const char *res[255];
     n = read(sockfd, res, 255);
+
+    printf("CLIENT INIT QUEUE\n");
 
     n = write(sockfd, &size, sizeof(int));
 
@@ -506,19 +503,20 @@ int socket_client_connect() {
         perror("ERROR opening socket");
         exit(1);
     }
-
+    printf("KEK\n");
     server = gethostbyname("localhost");
-
+    perror("gethostbyname\n");
+    printf("KEK2\n");
     if (server == NULL) {
         fprintf(stderr, "ERROR, no such host\n");
         exit(0);
     }
-
+    printf("KEK2\n");
     bzero((char *) &serv_addr, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     bcopy((char *) server->h_addr, (char *) &serv_addr.sin_addr.s_addr, server->h_length);
     serv_addr.sin_port = htons(portno);
-
+    printf("KEK3\n");
     /* Now connect to the server */
     if (connect(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
         perror("ERROR connecting");
@@ -542,21 +540,21 @@ pthread_cond_t condc, condp;
 
 
 void *producer(void *arg) {
-    // printf("Producer started\n");
+    printf("Producer started\n");
     for (count = 0; count < items_num; count++) {
 
         pthread_mutex_lock(&mutex);    /* protect buffer */
-        // printf("Working with buffer in producer %d %d\n", client_queue_size(), 5);
+        printf("Working with buffer in producer %d %d\n", client_queue_size(), 5);
         while (client_queue_size() ==
                client_max_queue_size()) {               /* If there is something in the buffer then wait */
             pthread_cond_wait(&condp, &mutex);
         }
-        // printf("\n\nProducer started!\n");
+        printf("\n\nProducer started!\n");
         /*Sleep item producer milliseconds and enque items[count] to priority queue
         */
-        // printf("Producer try to enqueue ");
-        print_item(&items[count]);
-        // printf("New size is  %d\n", client_queue_size());
+        printf("Producer try to enqueue ");
+        //print_item(&items[count]);
+        printf("New size is  %d\n", client_queue_size());
         usleep(items[count].produce_time * 1000);
 
         client_enqueue(items[count]);
@@ -571,7 +569,7 @@ void *producer(void *arg) {
 void *consumer(void *arg) {
     int i;
     FILE *file = fopen("results", "w+");
-    // printf("Consumer started\n");
+    printf("Consumer started\n");
     for (i = 1; i <= items_num; i++) {
         pthread_mutex_lock(&mutex);    /* protect buffer */
         while (client_queue_size() == 0) {        /* If there is nothing in the buffer then wait */
@@ -582,10 +580,10 @@ void *consumer(void *arg) {
         client_deque(&dequed);
 
 
-        // printf("Consumer ready to consume!. Queue size = %d \n", client_queue_size());
-        // printf("Dequeed item[%d] with  priority %d. New size: %d \n", dequed.id, dequed.priority, client_queue_size());
+        printf("Consumer ready to consume!. Queue size = %d \n", client_queue_size());
+        printf("Dequeed item[%d] with  priority %d. New size: %d \n", dequed.id, dequed.priority, client_queue_size());
         usleep(dequed.consume_time * 1000);
-        fprintf(file, "%d %d %d %d\n", dequed.id, dequed.produce_time, dequed.consume_time, dequed.priority);
+        fprintf(file, "%d %d %d %d\n", dequed.id, dequed.produce_time, dequed.consume_time, -1*dequed.priority);
         pthread_cond_signal(&condp);    /* wake up consumer */
         pthread_mutex_unlock(&mutex);    /* release the buffer */
     }
@@ -594,22 +592,21 @@ void *consumer(void *arg) {
 }
 
 void *shmem_producer(void *arg) {
-    // printf("Producer started\n");
-    // printf("producer - loh1\n");
+    printf("Producer started\n");
+    printf("producer - loh1\n");
     for (count = 0; count < items_num; count++) {
-        // printf("producer - loh2\n");
         pthread_mutex_lock(&mutex);    /* protect buffer */
-        // printf("%d %d\n", queue->size, queue->MAX_SIZE);
+        printf("%d %d\n", queue->size, queue->MAX_SIZE);
         while (queue->size == queue->MAX_SIZE) {               /* If there is something in the buffer then wait */
             pthread_cond_wait(&condp, &mutex);
         }
-        // printf("producer - loh3\n");
+        printf("producer - loh3\n");
         /*Sleep item producer milliseconds and enque items[count] to priority queue
         */
         usleep(items[count].produce_time * 1000);
         enqueue(queue, items[count].priority, &items[count]);
 
-        // printf("Producer produced item[%d] with priority %d. New size: %d \n", items[count].id, items[count].priority,queue->size);
+        printf("Producer produced item[%d] with priority %d. New size: %d \n", items[count].id, items[count].priority,queue->size);
 
         pthread_cond_signal(&condc);    /* wake up consumer */
         pthread_mutex_unlock(&mutex);    /* release the buffer */
@@ -620,8 +617,9 @@ void *shmem_producer(void *arg) {
 void *shmem_consumer(void *arg) {
     int i;
     FILE *file = fopen("results", "w+");
-    // printf("Consumer started\n");
-    for (i = 1; i <= items_num; i++) {
+    printf("Consumer started\n");
+    for (i = 0; i < items_num; i++) {
+
         pthread_mutex_lock(&mutex);    /* protect buffer */
         while (queue->size == 0) {        /* If there is nothing in the buffer then wait */
             pthread_cond_wait(&condc, &mutex);
@@ -630,13 +628,14 @@ void *shmem_consumer(void *arg) {
         Item *dequed;
         dequed = deque(queue);
 
-        // printf("Consumer ready to consume!. Queue size = %d \n", queue->size);
-        // printf("Dequeed item[%d] with  priority %d. New size: %d \n", dequed->id, dequed->priority, queue->size);
+        printf("Consumer ready to consume!. Queue size = %d \n", queue->size);
+        printf("Dequeed item[%d] with  priority %d. New size: %d \n", dequed->id, dequed->priority, queue->size);
         usleep(dequed->consume_time * 1000);
-        fprintf(file, "%d %d %d %d\n", dequed->id, dequed->produce_time, dequed->consume_time, dequed->priority);
+        fprintf(file, "%d %d %d %d\n", dequed->id, dequed->produce_time, dequed->consume_time, -1*dequed->priority);
         pthread_cond_signal(&condp);    /* wake up consumer */
         pthread_mutex_unlock(&mutex);    /* release the buffer */
     }
+
     fclose(file);
     pthread_exit(0);
 }
@@ -645,30 +644,29 @@ int main(int argc, char *argv[]) {
 
     int status;
 
-    int i;
-    items_num = countLines("items") - 1;
-    // printf("Number of items: %d\n", items_num);
+    int i=0;
+    items_num = 0;
+
     items = calloc(items_num, sizeof(Item));
     FILE *file = fopen("items", "r");
     int id, priority, c_time, p_time;
-    for (i = 0; i < items_num; i++) {
-        fscanf(file, "%d %d %d %d", &id, &p_time, &c_time, &priority);
-        items[i].id = id;
-        items[i].priority = -priority;
-        items[i].consume_time = c_time;
-        items[i].produce_time = p_time;
+    while(fscanf(file, "%d %d %d %d", &id, &p_time, &c_time, &priority)==4){
+        items[items_num].id = id;
+        items[items_num].priority = -priority;
+        items[items_num].consume_time = c_time;
+        items[items_num].produce_time = p_time;
+        items_num+=1;
     }
+
     fclose(file);
-//    for (i = 0; i < items_num; i++) {
-  //      // printf("Item [%d]: %d\n", items[i].id, items[i].priority);
-  //  }
+
     if (strcmp(argv[2], "shmem")) {
         COMMUNICATION_TYPE = 1;
         sem_init(&semvar,1,1);
         sem_wait(&semvar);
         status = pthread_create(&server_t, NULL, socket_server_start, &semvar);
         if (status != 0) {
-            // printf("main error: can't create socker server thread, status = %d\n", status);
+            printf("main error: can't create socker server thread, status = %d\n", status);
             exit(ERROR_CREATE_THREAD);
         }
         sem_wait(&semvar);
@@ -681,10 +679,10 @@ int main(int argc, char *argv[]) {
 
     if (COMMUNICATION_TYPE) {
         queue = client_init_queue(queue_size);
-        // printf("Queue size after creation %d\n", client_queue_size());
+        printf("Queue size after creation %d\n", client_queue_size());
     } else {
         queue = init_queue(queue_size);
-        // printf("Queue after creation %d",queue->size);
+        printf("Queue after creation %d",queue->size);
     }
 
 
@@ -697,7 +695,7 @@ int main(int argc, char *argv[]) {
         status = pthread_create(&producer_t, NULL, shmem_producer, NULL);
     }
     if (status != 0) {
-        // printf("main error: can't create producer thread, status = %d\n", status);
+        printf("main error: can't create producer thread, status = %d\n", status);
         exit(ERROR_CREATE_THREAD);
     }
     if (COMMUNICATION_TYPE){
@@ -706,17 +704,17 @@ int main(int argc, char *argv[]) {
         status = pthread_create(&consumer_t, NULL, shmem_consumer, NULL);
     }
     if (status != 0) {
-        // printf("main error: can't create consumer thread, status = %d\n", status);
+        printf("main error: can't create consumer thread, status = %d\n", status);
         exit(ERROR_CREATE_THREAD);
     }
     status = pthread_join(consumer_t, NULL);
     if (status != 0) {
-        // printf("main error: can't join consumer thread, status = %d\n", status);
+        printf("main error: can't join consumer thread, status = %d\n", status);
         exit(ERROR_JOIN_THREAD);
     }
     status = pthread_join(producer_t, NULL);
     if (status != 0) {
-        // printf("main error: can't join producer thread, status = %d\n", status);
+        printf("main error: can't join producer thread, status = %d\n", status);
         exit(ERROR_JOIN_THREAD);
     }
 
@@ -732,22 +730,5 @@ int main(int argc, char *argv[]) {
     return EXIT_SUCCESS;
 }
 
-void writeItem(FILE *file, struct Item item) {
-    fprintf(file, "%d %d %d %d", &(item.id), &item.produce_time, &item.consume_time, &item.priority);
-    //printf("Write: Item [%d] %d %d %d\n",item.id,item.produce_time,item.consume_time,item.priority);
-}
 
-int countLines(char *filename) {
-    int lines = 0;
-    char ch;
-    FILE *file = fopen(filename, "r");
-    while (!feof(file)) {
-        fscanf(file, "%c", &ch);
-        if (ch == '\n') {
-            lines++;
-        }
-    }
-    fclose(file);
-    return lines;
-}
 

@@ -68,7 +68,7 @@ void *client_deque(Item *item) {
     item->priority = dequed.priority;
     item->consume_time = dequed.consume_time;
     item->produce_time = dequed.produce_time;
-    // printf("Item[%d] dequed succesfully(client)!\n", dequed.id);
+    printf("Item[%d] dequed succesfully(client)!\n", dequed.id);
 
     closeSocket(sockfd);
     return 0;
