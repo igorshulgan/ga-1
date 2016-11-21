@@ -105,8 +105,7 @@ int main(int argc, char *argv[]) {
         printf("main error: can't create socker server thread, status = %d\n", status);
         exit(ERROR_CREATE_THREAD);
     }
-    sleep(1);
-    //pthread_mutex_lock(&mutex2);
+    pthread_mutex_lock(&mutex2);
     
     queue = client_init_queue(queue_size);
     printf("Queue size after creation %d\n", client_queue_size());
@@ -136,7 +135,7 @@ int main(int argc, char *argv[]) {
         printf("main error: can't join producer thread, status = %d\n", status);
         exit(ERROR_JOIN_THREAD);
     }
-    pthread_join(server_t, NULL);
+
 
     return EXIT_SUCCESS;
 }
