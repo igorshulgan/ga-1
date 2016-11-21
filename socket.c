@@ -32,9 +32,12 @@ void *producer(void *arg) {
         while (client_queue_size() == 5) {               /* If there is something in the buffer then wait */
             pthread_cond_wait(&condp, &mutex);
         }
-        printf("producer - loh3\n");
+        printf("\n\nProducer started!\n");
         /*Sleep item producer milliseconds and enque items[count] to priority queue
         */
+	printf("Producer try to enqueue ");
+	print_item(&items[count]);
+	printf("Will sleep %d\n",items[count].produce_time);
         usleep(items[count].produce_time * 1000);
 
         client_enqueue(items[count]);
@@ -102,8 +105,9 @@ int main(int argc, char *argv[]) {
         printf("main error: can't create socker server thread, status = %d\n", status);
         exit(ERROR_CREATE_THREAD);
     }
-    pthread_mutex_lock(&mutex2);
-
+    sleep(1);
+    //pthread_mutex_lock(&mutex2);
+    
     queue = client_init_queue(queue_size);
     printf("Queue size after creation %d\n", client_queue_size());
 

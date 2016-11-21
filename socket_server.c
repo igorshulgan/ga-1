@@ -18,7 +18,7 @@
 #include <netinet/in.h>
 
 #include <string.h>
-
+#define PORT_NUM 5017
 Heap *heap;
 
 
@@ -39,7 +39,8 @@ void server_size(int sock) {
 
 void server_deque(int sock) {
 
-    Item* temp1= deque(heap);
+    Item* temp1 = (Item*)malloc(sizeof(Item)); 
+    temp1 = deque(heap);
     
     printf("Server Dequeued ");
     print_item(temp1);
@@ -54,7 +55,8 @@ void server_deque(int sock) {
 }
 
 void server_enqueue(int sock) {
-    Item temp;
+    Item* temp = (Item*)malloc(sizeof(Item)); 
+
     int n = read(sock, &temp, sizeof(Item));
 
     if (n < 0) {
@@ -67,7 +69,6 @@ void server_enqueue(int sock) {
 
     enqueue(heap, temp.priority, &temp);
     
-
     return;
 }
 
@@ -141,7 +142,7 @@ void socket_server_start(pthread_mutex_t mutex) {
 
     /* Initialize socket structure */
     bzero((char *) &serv_addr, sizeof(serv_addr));
-    portno = 5016;
+    portno = PORT_NUM;
 
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -159,9 +160,10 @@ void socket_server_start(pthread_mutex_t mutex) {
 
     listen(sockfd, 5);
     clilen = sizeof(cli_addr);
+   
 
     printf("Server created\n");
-    pthread_mutex_unlock(&mutex);
+   // pthread_mutex_unlock(&mutex);
 
     while (1) {
         newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);

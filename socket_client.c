@@ -110,7 +110,7 @@ int socket_client_connect() {
 
     char buffer[256];
 
-    portno = 5016;
+    portno = PORT_NUM;
 
     /* Create a socket point */
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
