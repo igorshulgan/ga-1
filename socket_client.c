@@ -18,6 +18,7 @@ int client_queue_size() {
     int size = -1;
     int n = read(sockfd, &size, sizeof(int));
     if (n < 0) { perror("Error reading size from server\n"); }
+    close(sockfd);
     return size;
 }
 
@@ -27,7 +28,9 @@ int client_max_queue_size(){
   write(sockfd,"max_size",strlen("max_size"));
   int max_size =-1;
   int n =read(sockfd,&max_size,sizeof(int));
-  if(n<0) {perror("Error reading MAX_SIZE from server \n");}
+  if(n<0) {perror("Error reading MAX_SIZE from server \n");
+  }
+    close(sockfd);
   return max_size;
 }
 
@@ -39,6 +42,7 @@ void client_close_queue() {
         perror("ERROR writing to socket");
         exit(1);
     }
+    close(sockfd);
 }
 
 void *client_deque(Item* item) {
@@ -65,6 +69,7 @@ void *client_deque(Item* item) {
     item->produce_time = dequed.produce_time;
     printf("Item[%d] dequed succesfully(client)!\n",dequed.id);
 
+    close(sockfd);
     return 0;
 }
 
@@ -84,6 +89,7 @@ int client_enqueue(Item item) {
         exit(1);
     }
 
+    close(sockfd);
     return 0;
 }
 
@@ -107,6 +113,7 @@ int *client_init_queue(int size) {
         exit(1);
     }
 
+    close(sockfd);
     return 0;
 
 }

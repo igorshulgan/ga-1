@@ -18,7 +18,7 @@
 #include <netinet/in.h>
 
 #include <string.h>
-#define PORT_NUM 5017
+#define PORT_NUM 5018
 Heap *heap;
 
 
@@ -170,7 +170,7 @@ void socket_server_start(pthread_mutex_t mutex) {
    
 
     printf("Server created\n");
-   // pthread_mutex_unlock(&mutex);
+    pthread_mutex_unlock(&mutex);
 
     while (1) {
         newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
@@ -188,6 +188,7 @@ void socket_server_start(pthread_mutex_t mutex) {
 
 }
 
-void stop() {
+void server_stop() {
     close(sockfd);
+    pthread_exit(0);
 }

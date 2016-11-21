@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
         printf("main error: can't join producer thread, status = %d\n", status);
         exit(ERROR_JOIN_THREAD);
     }
-
+    server_stop();
 
     return EXIT_SUCCESS;
 }
