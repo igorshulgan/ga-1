@@ -37,6 +37,10 @@ void server_size(int sock) {
     write(sock, &(heap->size), sizeof(int));
 }
 
+void server_max_size(int sock){
+   write(sock, &heap->MAX_SIZE, sizeof(int));
+}
+
 void server_deque(int sock) {
 
     Item* temp1 = (Item*)malloc(sizeof(Item)); 
@@ -57,7 +61,7 @@ void server_deque(int sock) {
 void server_enqueue(int sock) {
     Item* temp = (Item*)malloc(sizeof(Item)); 
 
-    int n = read(sock, &temp, sizeof(Item));
+    int n = read(sock, temp, sizeof(Item));
 
     if (n < 0) {
         perror("ERROR reading from socket");
@@ -65,9 +69,9 @@ void server_enqueue(int sock) {
     }
 
     printf("Server enqueing ");
-    print_item(&temp);
+    print_item(temp);
 
-    enqueue(heap, temp.priority, &temp);
+    enqueue(heap, temp->priority, temp);
     
     return;
 }
@@ -120,6 +124,9 @@ void doprocessing(int sock) {
     }
     if (strcmp(buffer, "close_queue") == 0) {
         close_queue(heap);
+    }
+    if (strcmp(buffer,"max_size")==0){
+       server_max_size(sock);
     }
 
     return;
