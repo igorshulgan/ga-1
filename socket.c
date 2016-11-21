@@ -5,6 +5,7 @@
 #include <assert.h>
 #include "socket_server.c"
 #include "socket_client.c"
+#include <semaphore.h>
 
 #define ERROR_CREATE_THREAD -11
 #define ERROR_JOIN_THREAD   -12
@@ -19,7 +20,8 @@ int queue_size;
 Item *items;
 Heap *queue;
 pthread_t consumer_t, producer_t, clien_t, server_t;
-pthread_mutex_t mutex, mutex2;
+pthread_mutex_t mutex;
+sem_t semvar;
 pthread_cond_t condc, condp;
 
 
@@ -99,13 +101,13 @@ int main(int argc, char *argv[]) {
     }
     queue_size = atoi(argv[1]);
 
-    pthread_mutex_lock(&mutex2);
-    status = pthread_create(&server_t, NULL, socket_server_start, &mutex2);
+    sem_wait(&semvar);
+    status = pthread_create(&server_t, NULL, socket_server_start, &semvar);
     if (status != 0) {
         printf("main error: can't create socker server thread, status = %d\n", status);
         exit(ERROR_CREATE_THREAD);
     }
-    pthread_mutex_lock(&mutex2);
+    sem_wait(&semvar);
 
     queue = client_init_queue(queue_size);
     printf("Queue size after creation %d\n", client_queue_size());

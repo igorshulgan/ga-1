@@ -18,6 +18,7 @@
 #include <netinet/in.h>
 
 #include <string.h>
+#include <semaphore.h>
 
 #define PORT_NUM 5018
 Heap *heap;
@@ -137,7 +138,7 @@ int doprocessing(int sock) {
     return 1;
 };
 
-void socket_server_start(pthread_mutex_t mutex) {
+void socket_server_start(sem_t semvar) {
 
 
     char buffer[256];
@@ -175,7 +176,7 @@ void socket_server_start(pthread_mutex_t mutex) {
 
 
     printf("Server created\n");
-    pthread_mutex_unlock(&mutex);
+    sem_post(&semvar);
 
     while (1) {
         newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
