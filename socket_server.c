@@ -12,6 +12,8 @@
 #include <sys/un.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <netdb.h>
+#include <netinet/in.h>
 
 #include "priority_queue.c"
 #include <netdb.h>
@@ -35,6 +37,7 @@ void print_item(Item *item) {
     printf("Item[%d] with priority %d, c_time: %d, p_time: %d\n", item->id, item->priority, item->consume_time,
            item->produce_time);
 }
+
 
 void server_size(int sock) {
     write(sock, &(heap->size), sizeof(int));
@@ -190,7 +193,7 @@ void socket_server_start(sem_t* semvar) {
         close(newsockfd);
         if (!res) {
             close(sockfd);
-            return;
+            exit(0);
         }
 
     } /* end of while */
