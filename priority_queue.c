@@ -122,7 +122,7 @@ int delete_max(Heap *heap) {
         }
         if (queue[index].priority < queue[max_child].priority) {
             // print_heap(heap);
-            // printf("\nindex is %d, max_child is %d, size is %d, left_child is %d, right_child is %d\n", index, max_child, heap->size, left_child, right_child );
+            // // // printf("\nindex is %d, max_child is %d, size is %d, left_child is %d, right_child is %d\n", index, max_child, heap->size, left_child, right_child );
             Priority_node temp_node = queue[index];
             queue[index] = queue[max_child];
             queue[max_child] = temp_node;
@@ -148,7 +148,7 @@ void *getMax(Heap *heap) {
 
 void *deque(Heap *heap) {
     if (heap->size == 0) {
-        printf("Blocked deque\n");
+        // // printf("Blocked deque\n");
         pthread_mutex_lock(&heap->lock_on_deque);
     }
     pthread_mutex_lock(&heap->lock_on_data);
@@ -162,13 +162,13 @@ void *deque(Heap *heap) {
 void print_heap(Heap *heap) {
     int i;
     pthread_mutex_lock(&heap->lock_on_data);
-    printf("\nIT IS A HEAP\n");
+    // // printf("\nIT IS A HEAP\n");
     for (i = 0; i < heap->size; i++) {
-        printf("%6d", heap->queue[i].priority);
+        // // printf("%6d", heap->queue[i].priority);
     }
-    printf("\n");
+    // // printf("\n");
     for (i = 0; i < heap->size; i++) {
-        printf("%6d", heap->queue[i].data);
+        // // printf("%6d", heap->queue[i].data);
     }
     pthread_mutex_unlock(&heap->lock_on_data);
 }
