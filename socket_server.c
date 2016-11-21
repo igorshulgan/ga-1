@@ -18,7 +18,7 @@
 #include <netinet/in.h>
 
 #include <string.h>
-#define PORT_NUM 5018
+#define PORT_NUM 5017
 Heap *heap;
 
 
@@ -35,6 +35,10 @@ void print_item(Item* item){
 
 void server_size(int sock) {
     write(sock, &(heap->size), sizeof(int));
+}
+
+void server_max_size(int sock){
+   write(sock, &heap->MAX_SIZE, sizeof(int));
 }
 
 void server_deque(int sock) {
@@ -65,9 +69,9 @@ void server_enqueue(int sock) {
     }
 
     printf("Server enqueing ");
-    print_item(&temp);
+    print_item(temp);
 
-    enqueue(heap, temp->priority, &temp);
+    enqueue(heap, temp->priority, temp);
     
     return;
 }
@@ -121,6 +125,9 @@ void doprocessing(int sock) {
     if (strcmp(buffer, "close_queue") == 0) {
         close_queue(heap);
     }
+    if (strcmp(buffer,"max_size")==0){
+       server_max_size(sock);
+    }
 
     return;
 };
@@ -163,7 +170,7 @@ void socket_server_start(pthread_mutex_t mutex) {
    
 
     printf("Server created\n");
-    pthread_mutex_unlock(&mutex);
+   // pthread_mutex_unlock(&mutex);
 
     while (1) {
         newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
@@ -182,6 +189,5 @@ void socket_server_start(pthread_mutex_t mutex) {
 }
 
 void stop() {
-    close_queue(heap);
     close(sockfd);
 }

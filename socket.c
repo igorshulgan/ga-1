@@ -29,7 +29,7 @@ void *producer(void *arg) {
 
         pthread_mutex_lock(&mutex);    /* protect buffer */
         printf("Working with buffer in producer %d %d\n", client_queue_size(), 5);
-        while (client_queue_size() == 5) {               /* If there is something in the buffer then wait */
+        while (client_queue_size() == client_max_queue_size()) {               /* If there is something in the buffer then wait */
             pthread_cond_wait(&condp, &mutex);
         }
         printf("\n\nProducer started!\n");
@@ -37,7 +37,7 @@ void *producer(void *arg) {
         */
 	printf("Producer try to enqueue ");
 	print_item(&items[count]);
-	printf("Will sleep %d\n",items[count].produce_time);
+	printf("New size is  %d\n",client_queue_size());
         usleep(items[count].produce_time * 1000);
 
         client_enqueue(items[count]);

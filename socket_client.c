@@ -21,6 +21,16 @@ int client_queue_size() {
     return size;
 }
 
+int client_max_queue_size(){ 
+   int sockfd = socket_client_connect();
+  
+  write(sockfd,"max_size",strlen("max_size"));
+  int max_size =-1;
+  int n =read(sockfd,&max_size,sizeof(int));
+  if(n<0) {perror("Error reading MAX_SIZE from server \n");}
+  return max_size;
+}
+
 void client_close_queue() {
     int sockfd = socket_client_connect();
     int n = write(sockfd, "close_queue", strlen("close_queue"));
