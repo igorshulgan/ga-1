@@ -20,6 +20,8 @@
 #include <string.h>
 
 Heap *heap;
+
+
 typedef struct Item {
     int id;
     int consume_time;
@@ -27,21 +29,21 @@ typedef struct Item {
     int priority;
 } Item;
 
+void print_item(Item* item){
+    printf("Item[%d] with priority %d, c_time: %d, p_time: %d\n",item->id,item->priority,item->consume_time,item->produce_time);
+}
+
 void server_size(int sock) {
     write(sock, &(heap->size), sizeof(int));
 }
 
 void server_deque(int sock) {
 
-    Item* temp1;
+    Item* temp1= deque(heap);
+    
+    printf("Server Dequeued ");
+    print_item(temp1);
 
-    printf("----------------\n");
-    print_heap(heap);
-    temp1 = deque(heap);
-    printf("Consumer dequed item[%d] with priority %d. New size: %d \n", temp1, temp1->priority,
-           heap->size);
-    print_heap(heap);
-    printf("----------------\n");
     int n = write(sock, temp1, sizeof(Item));
 
     if (n < 0) {
@@ -60,15 +62,11 @@ void server_enqueue(int sock) {
         exit(1);
     }
 
-    printf("Producer produced item[%d] with priority %d. New size: %d \n", temp, temp.priority,
-           heap->size);
-    enqueue(heap, temp.priority, &temp);
+    printf("Server enqueing ");
+    print_item(&temp);
 
-    Item* temp1;
-    temp1=deque(heap);
-    printf("Producer dequed item[%d] with priority %d. New size: %d \n", temp1, temp.priority,
-           heap->size);
     enqueue(heap, temp.priority, &temp);
+    
 
     return;
 }
@@ -87,7 +85,7 @@ void server_init_queue(int sock) {
     heap = init_queue(size);
 
     printf("Heap created. Heap size: %d\n", heap->size);
-    printf("Heap address %d \n", heap);
+
     return;
 }
 
