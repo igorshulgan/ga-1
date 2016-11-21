@@ -29,19 +29,19 @@ void *producer(void *arg) {
 
         pthread_mutex_lock(&mutex);    /* protect buffer */
         printf("Working with buffer in producer %d %d\n", client_queue_size(), 5);
-        while (client_queue_size() == client_max_queue_size()) {               /* If there is something in the buffer then wait */
+        while (client_queue_size() ==
+               client_max_queue_size()) {               /* If there is something in the buffer then wait */
             pthread_cond_wait(&condp, &mutex);
         }
         printf("\n\nProducer started!\n");
         /*Sleep item producer milliseconds and enque items[count] to priority queue
         */
-	printf("Producer try to enqueue ");
-	print_item(&items[count]);
-	printf("New size is  %d\n",client_queue_size());
+        printf("Producer try to enqueue ");
+        print_item(&items[count]);
+        printf("New size is  %d\n", client_queue_size());
         usleep(items[count].produce_time * 1000);
 
         client_enqueue(items[count]);
-
 
 
         pthread_cond_signal(&condc);    /* wake up consumer */
@@ -106,7 +106,7 @@ int main(int argc, char *argv[]) {
         exit(ERROR_CREATE_THREAD);
     }
     pthread_mutex_lock(&mutex2);
-    
+
     queue = client_init_queue(queue_size);
     printf("Queue size after creation %d\n", client_queue_size());
 
@@ -135,7 +135,10 @@ int main(int argc, char *argv[]) {
         printf("main error: can't join producer thread, status = %d\n", status);
         exit(ERROR_JOIN_THREAD);
     }
-    server_stop();
+
+    //STOP_SERVER
+    int sock = socket_client_connect();
+    write(sock, "stop", strlen("stop"));
 
     return EXIT_SUCCESS;
 }

@@ -18,6 +18,7 @@
 #include <netinet/in.h>
 
 #include <string.h>
+
 #define PORT_NUM 5018
 Heap *heap;
 
@@ -29,23 +30,24 @@ typedef struct Item {
     int priority;
 } Item;
 
-void print_item(Item* item){
-    printf("Item[%d] with priority %d, c_time: %d, p_time: %d\n",item->id,item->priority,item->consume_time,item->produce_time);
+void print_item(Item *item) {
+    printf("Item[%d] with priority %d, c_time: %d, p_time: %d\n", item->id, item->priority, item->consume_time,
+           item->produce_time);
 }
 
 void server_size(int sock) {
     write(sock, &(heap->size), sizeof(int));
 }
 
-void server_max_size(int sock){
-   write(sock, &heap->MAX_SIZE, sizeof(int));
+void server_max_size(int sock) {
+    write(sock, &heap->MAX_SIZE, sizeof(int));
 }
 
 void server_deque(int sock) {
 
-    Item* temp1 = (Item*)malloc(sizeof(Item)); 
+    Item *temp1 = (Item *) malloc(sizeof(Item));
     temp1 = deque(heap);
-    
+
     printf("Server Dequeued ");
     print_item(temp1);
 
@@ -59,7 +61,7 @@ void server_deque(int sock) {
 }
 
 void server_enqueue(int sock) {
-    Item* temp = (Item*)malloc(sizeof(Item)); 
+    Item *temp = (Item *) malloc(sizeof(Item));
 
     int n = read(sock, temp, sizeof(Item));
 
@@ -72,7 +74,7 @@ void server_enqueue(int sock) {
     print_item(temp);
 
     enqueue(heap, temp->priority, temp);
-    
+
     return;
 }
 
@@ -96,7 +98,7 @@ void server_init_queue(int sock) {
 
 int sockfd, newsockfd, portno, clilen;
 
-void doprocessing(int sock) {
+int doprocessing(int sock) {
     int n;
     const char *buffer[256];
     bzero(buffer, 256);
@@ -125,11 +127,14 @@ void doprocessing(int sock) {
     if (strcmp(buffer, "close_queue") == 0) {
         close_queue(heap);
     }
-    if (strcmp(buffer,"max_size")==0){
-       server_max_size(sock);
+    if (strcmp(buffer, "max_size") == 0) {
+        server_max_size(sock);
+    }
+    if (strcmp(buffer, "stop") == 0) {
+        return 0;
     }
 
-    return;
+    return 1;
 };
 
 void socket_server_start(pthread_mutex_t mutex) {
@@ -167,7 +172,7 @@ void socket_server_start(pthread_mutex_t mutex) {
 
     listen(sockfd, 5);
     clilen = sizeof(cli_addr);
-   
+
 
     printf("Server created\n");
     pthread_mutex_unlock(&mutex);
@@ -180,15 +185,13 @@ void socket_server_start(pthread_mutex_t mutex) {
             exit(1);
         }
 
-
-        doprocessing(newsockfd);
+        int res = doprocessing(newsockfd);
         close(newsockfd);
+        if (!res) {
+            close(sockfd);
+            return;
+        }
 
     } /* end of while */
 
-}
-
-void server_stop() {
-    close(sockfd);
-    pthread_exit(0);
 }
