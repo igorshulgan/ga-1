@@ -69,7 +69,7 @@ void *consumer(void *arg) {
         printf("Consumer ready to consume!. Queue size = %d \n", client_queue_size());
         printf("Dequeed item[%d] with  priority %d. New size: %d \n", dequed.id, dequed.priority, client_queue_size());
         usleep(dequed.consume_time * 1000);
-        //fprintf(file, "%d %d %d %d\n", dequed->id, dequed->produce_time, dequed->consume_time, dequed->priority);
+        fprintf(file, "%d %d %d %d\n", dequed.id, dequed.produce_time, dequed.consume_time, dequed.priority);
         pthread_cond_signal(&condp);    /* wake up consumer */
         pthread_mutex_unlock(&mutex);    /* release the buffer */
     }
@@ -96,11 +96,11 @@ int main(int argc, char *argv[]) {
         items[i].produce_time = p_time;
     }
     fclose(file);
-    for (i = 0; i < items_num; i++) {
-        printf("Item [%d]: %d\n", items[i].id, items[i].priority);
-    }
+//    for (i = 0; i < items_num; i++) {
+  //      printf("Item [%d]: %d\n", items[i].id, items[i].priority);
+  //  }
     queue_size = atoi(argv[1]);
-
+    sem_init(&semvar,1,1);
     sem_wait(&semvar);
     status = pthread_create(&server_t, NULL, socket_server_start, &semvar);
     if (status != 0) {

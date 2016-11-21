@@ -138,7 +138,7 @@ int doprocessing(int sock) {
     return 1;
 };
 
-void socket_server_start(sem_t semvar) {
+void socket_server_start(sem_t* semvar) {
 
 
     char buffer[256];
@@ -176,7 +176,7 @@ void socket_server_start(sem_t semvar) {
 
 
     printf("Server created\n");
-    sem_post(&semvar);
+    sem_post(semvar);
 
     while (1) {
         newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
