@@ -34,7 +34,7 @@ typedef struct Item {
 } Item;
 
 void print_item(Item *item) {
-    printf("Item[%d] with priority %d, c_time: %d, p_time: %d\n", item->id, item->priority, item->consume_time,
+   // printf("Item[%d] with priority %d, c_time: %d, p_time: %d\n", item->id, item->priority, item->consume_time,
            item->produce_time);
 }
 
@@ -52,7 +52,7 @@ void server_deque(int sock) {
     Item *temp1 = (Item *) malloc(sizeof(Item));
     temp1 = deque(heap);
 
-    printf("Server Dequeued ");
+   // printf("Server Dequeued ");
     print_item(temp1);
 
     int n = write(sock, temp1, sizeof(Item));
@@ -74,7 +74,7 @@ void server_enqueue(int sock) {
         exit(1);
     }
 
-    printf("Server enqueing ");
+   // printf("Server enqueing ");
     print_item(temp);
 
     enqueue(heap, temp->priority, temp);
@@ -86,7 +86,7 @@ void server_init_queue(int sock) {
 
     int size;
     int n = read(sock, &size, sizeof(size));
-    printf("size %d\n", size);
+   // printf("size %d\n", size);
 
     if (n < 0) {
         perror("ERROR reading from socket");
@@ -95,7 +95,7 @@ void server_init_queue(int sock) {
 
     heap = init_queue(size);
 
-    printf("Heap created. Heap size: %d\n", heap->size);
+   // printf("Heap created. Heap size: %d\n", heap->size);
 
     return;
 }
@@ -178,7 +178,7 @@ void socket_server_start(sem_t* semvar) {
     clilen = sizeof(cli_addr);
 
 
-    printf("Server created\n");
+   // printf("Server created\n");
     sem_post(semvar);
 
     while (1) {
